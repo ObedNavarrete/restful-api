@@ -1,5 +1,6 @@
 package project.base.security.service;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import project.base.security.dto.ResponseDTO;
 import project.base.security.dto.UserDTO;
 import project.base.security.dto.UsuarioPassDTO;

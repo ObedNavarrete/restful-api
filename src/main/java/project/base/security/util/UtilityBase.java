@@ -1,14 +1,17 @@
 package project.base.security.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import project.base.security.dto.ResponseDTO;
 import project.base.security.entity.Usuario;
 import project.base.security.repository.UsuarioRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 public class UtilityBase {
@@ -16,11 +19,14 @@ public class UtilityBase {
     @Autowired
     UsuarioRepository usuarioRepository;
 
+    public static final HashMap map = new HashMap() {{
+        put("error", "El status de este usuario ha cambiado, por favor actualice la página");
+    }};
+
     // creadoPor
     public Integer creadoPor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer id = usuarioRepository.obtenerIdUsuarioLogueado(authentication.getName());
-        return id;
+        return authentication.getName() != null ? Integer.parseInt(authentication.getName()) : null; // authentication.getName() es el id del usuario
     }
 
     // creadoEl
@@ -40,8 +46,7 @@ public class UtilityBase {
     // modificadoPor
     public Integer modificadoPor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer id = usuarioRepository.obtenerIdUsuarioLogueado(authentication.getName());
-        return id;
+        return authentication.getName() != null ? Integer.parseInt(authentication.getName()) : null; // authentication.getName() es el id del usuario
     }
 
     // modificadoEl
@@ -121,11 +126,30 @@ public class UtilityBase {
     // Verificar si el usuario sigue siendo válido
     public boolean esUsuarioValido() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer id = usuarioRepository.obtenerIdUsuarioLogueado(authentication.getName());
+        Integer id = usuarioRepository.obtenerId(this.creadoPor());
         if (id == null) {
             return false;
         } else {
             return true;
         }
+    }
+
+    // Forbbiden Controller Response
+    public ResponseEntity<?> forbiddenResponse() {
+        return ResponseEntity.status(403).body(map);
+    }
+
+    public ResponseDTO exceptionMensaje(String mensaje, Exception e) {
+        String cause = e.getCause().getCause().getMessage();
+        cause = cause.substring(cause.indexOf("Detail:"));
+        return new ResponseDTO("500", "error", mensaje + " " + cause, null);
+    }
+
+    public ResponseDTO exitoMensaje(String mensaje, Object data) {
+        return new ResponseDTO("200", "success", mensaje, data);
+    }
+
+    public ResponseDTO errorMensaje(String mensaje) {
+        return new ResponseDTO("400", "error", mensaje, null);
     }
 }

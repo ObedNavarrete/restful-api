@@ -10,6 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import project.base.security.util.Constantes;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -29,18 +30,15 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         this.authenticationManager = authenticationManager;
     }
 
-    @Value("${jwt.secret}")
-    String secretSignature;
-
-    //El post se ejecuta cuando se envia el email y password
+    //El post se ejecuta cuando se envia el emailOrPhone y el password
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        String email = request.getParameter("email");
+        String emailOrPhone = request.getParameter("emailOrPhone");
         String password = request.getParameter("password");
-        log.info("Attempting authentication. Email: " + email);
+        log.info("Attempting authentication. Email or phone: {}", emailOrPhone);
         log.info("Attempting authentication. Password: " + password);
 
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password);
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(emailOrPhone, password);
         return authenticationManager.authenticate(authToken);
     }
 
@@ -48,21 +46,21 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
         User user = (User) authentication.getPrincipal();
 
-        log.info("Successful authentication. Email: " + user.getUsername());
+        log.info("Autenticacion exitosa. Id: " + user.getUsername());
 
-        String secretKeyJwt = "6300cee0-0b76-439f-b61e-962746f75b34";
+        String secretKeyJwt = Constantes.SECRET_KEY_JWT;
         Algorithm algorithm = Algorithm.HMAC256(secretKeyJwt.getBytes());
 
         String access_token = com.auth0.jwt.JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 20160 * 60 * 1000)) // 10 minutes
+                .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 20160 * 60 * 1000)) // 2 semanas
                 .withIssuer(request.getRequestURL().toString())
                 .withClaim("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .sign(algorithm);
 
         String refresh_token = com.auth0.jwt.JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 30 * 60 * 1000)) // 30 minutes
+                .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 43200L * 60 * 1000)) // 30 dias
                 .withIssuer(request.getRequestURL().toString())
                 .sign(algorithm);
 
@@ -81,6 +79,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
         Map<String, String> errors = new HashMap<>();
         errors.put("message", failed.getMessage());
+        errors.put("details", "La autenticacion ha fallado");
         response.setContentType("application/json");
         response.setStatus(401);
         new com.fasterxml.jackson.databind.ObjectMapper().writeValue(response.getOutputStream(), errors);

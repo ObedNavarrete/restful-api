@@ -42,30 +42,25 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
      * By: Obed Navarrete
      * Date: 29/10/2022
      * This method is used for the authentication of the user
-     * @param email or phone of the user to be authenticated
+     * @param emailOrPhone or phone of the user to be authenticated
      * @return the persisted entity of the user authenticated or null if the user is not found
      */
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndEmail(email);
+    public UserDetails loadUserByUsername(String emailOrPhone) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndTelefonoOrEmail(emailOrPhone, emailOrPhone);
 
         if (usuario == null) {
-            log.error("Email not found in the database");
-            usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndTelefono(email);
-            if (usuario == null) {
-                log.error("Phone not found in the database");
-                throw new UsernameNotFoundException("Email or Phone not found in the database");
-            }
+            log.error("EmailOrPhone {} not found", emailOrPhone);
+            throw new UsernameNotFoundException("Email or Phone not found in the database");
         }
 
-        log.info("User found in the database: {}", email);
+        log.info("User found in the database: {}", emailOrPhone);
         Collection<SimpleGrantedAuthority> authorities = usuario.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getNombre()))
                 .collect(Collectors.toList());
 
-
         return new org.springframework.security.core.userdetails
-                .User(usuario.getEmail(), usuario.getPassword(), authorities);
+                .User(usuario.getId().toString(), usuario.getPassword(), authorities);
     }
 
     @Override
@@ -80,17 +75,10 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             usuarioEntity.setCreadoEl(new Date());
             usuarioEntity.setCreadoEnIp("localhost");
             usuarioRepository.save(usuarioEntity);
-
-            response.setStatus("200");
-            response.setMessage("success");
-            response.setComment("User saved successfully");
-            response.setData(usuarioMapper.toDTO(usuarioEntity));
-            return response;
+            return this.exitoMensaje("Usuario creado con exito", null);
         } catch (Exception e) {
-            response.setStatus("500");
-            response.setMessage("error");
-            response.setComment("User save failed, comment: " + e.getMessage());
-            return response;
+            log.error("Error al guardar el usuario: {}", e.getMessage());
+            return this.exceptionMensaje("Error al crear el usuario", e);
         }
     }
 
@@ -98,11 +86,10 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     public ResponseDTO guardarSuperAdmin(UsuarioPassDTO user) {
         log.info("save new user {} to the database ", user.getEmail());
 
-        if ((user.getEmail().isEmpty() || user.getEmail() == null) && (user.getTelefono().isEmpty() || user.getTelefono() == null)) {
-            return new ResponseDTO("500", "error", "User save failed, comment: Email or Phone is required", null);
+        if ((user.getEmail() == null || user.getEmail().isEmpty()) && (user.getTelefono() == null || user.getTelefono().isEmpty())) {
+            return this.errorMensaje("El email o el telefono son obligatorios");
         }
 
-        ResponseDTO response = new ResponseDTO();
         try {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             Usuario usuarioEntity = usuarioMapper.withPassToEtity(user);
@@ -113,17 +100,10 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             Usuario nu = usuarioRepository.save(usuarioEntity);
             nu.getRoles().add(rolRepository.findByNombre("ROLE_SUPER_ADMIN"));
 
-            response.setStatus("201");
-            response.setMessage("success");
-            response.setComment("User saved successfully");
-            response.setData(usuarioMapper.toDTO(usuarioEntity));
-            return response;
+            return this.exitoMensaje("Usuario Super Admin creado con exito", null);
         } catch (Exception e) {
             log.error("User save failed, comment: " + e.getMessage());
-            response.setStatus("500");
-            response.setMessage("error");
-            response.setComment("User save failed, comment: " + e.getMessage());
-            return response;
+            return this.exceptionMensaje("Error al crear el usuario", e);
         }
     }
 
@@ -131,8 +111,8 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     public ResponseDTO guardarAdmin(UsuarioPassDTO user) {
         log.info("save new user {} to the database ", user.getEmail());
 
-        if ((user.getEmail().isEmpty() || user.getEmail() == null) && (user.getTelefono().isEmpty() || user.getTelefono() == null)) {
-            return new ResponseDTO("500", "error", "User save failed, comment: Email or Phone is required", null);
+        if ((user.getEmail() == null || user.getEmail().isEmpty()) && (user.getTelefono() == null || user.getTelefono().isEmpty())) {
+            return this.errorMensaje("El email o el telefono son obligatorios");
         }
 
         ResponseDTO response = new ResponseDTO();
@@ -145,20 +125,10 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             usuarioEntity.setCreadoEnIp(this.creadoEnIp());
             Usuario nu = usuarioRepository.save(usuarioEntity);
             nu.getRoles().add(rolRepository.findByNombre("ROLE_ADMIN"));
-
-            response.setStatus("201");
-            response.setMessage("success");
-            response.setComment("User saved successfully");
-            response.setData(usuarioMapper.toDTO(usuarioEntity));
-
-            log.info("User saved successfully");
-            return response;
+            return this.exitoMensaje("Usuario Admin creado con exito", null);
         } catch (Exception e) {
             log.error("User save failed, comment: " + e.getMessage());
-            response.setStatus("500");
-            response.setMessage("error");
-            response.setComment("User save failed, comment: " + e.getMessage());
-            return response;
+            return this.exceptionMensaje("Error al crear el usuario", e);
         }
     }
 
@@ -166,12 +136,14 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     public ResponseDTO obtenerPorId(Integer id) {
         log.info("get user by id {} ", id);
         Usuario user = usuarioRepository.findById(id).orElse(null);
+
+        Integer idUsuario = this.creadoPor();
+
         if (user == null) {
             log.error("User not found in the database");
-            throw new UsernameNotFoundException("User not found");
+            return this.errorMensaje("Usuario no encontrado");
         }
-
-        return new ResponseDTO("200", "success", "User found", usuarioMapper.toDTO(user));
+        return this.exitoMensaje("Usuario encontrado", usuarioMapper.toDTO(user));
     }
 
     @Override
@@ -210,7 +182,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
 
         if (usuarioList.isEmpty()) {
             log.error("Users not found in the database");
-            return new ResponseDTO("404", "error", "Users not found", null);
+            return this.errorMensaje("No se encontraron usuarios");
         }
 
         List<UserDTO> userDTOList = usuarioList.stream().map(usuarioMapper::toDTO).collect(Collectors.toList());
@@ -222,7 +194,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
         pageResponse.setSize(users.getSize());
         pageResponse.setLast(users.isLast());
 
-        return new ResponseDTO("200", "success", "Users found", pageResponse);
+        return this.exitoMensaje("Usuarios encontrados", pageResponse);
     }
 
     @Override
@@ -233,7 +205,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
         Usuario usuarioEntity = usuarioRepository.findById(id).orElse(null);
         if (usuarioEntity == null) {
             log.error("User not found in the database");
-            return new ResponseDTO("404", "error", "User not found", null);
+            return this.errorMensaje("Usuario no encontrado");
         }
 
         try {
@@ -247,17 +219,11 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             usuarioEntity.setActivo(true);
 
             usuarioRepository.save(usuarioEntity);
-            response.setStatus("200");
-            response.setMessage("success");
-            response.setComment("User updated successfully");
-            response.setData(null);
             log.info("User updated successfully");
-            return response;
+            return this.exitoMensaje("Usuario actualizado con exito", null);
         } catch (Exception e) {
-            response.setStatus("500");
-            response.setMessage("error");
-            response.setComment("User update failed, comment: " + e.getMessage());
-            return response;
+            log.error("User update failed, comment: " + e.getMessage());
+            return this.exceptionMensaje("Error al actualizar el usuario", e);
         }
     }
 
@@ -269,7 +235,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
         Usuario usuarioEntity = usuarioRepository.findByPasivoIsFalseAndId(id);
         if (usuarioEntity == null) {
             log.error("User not found in the database or already deleted");
-            return new ResponseDTO("404", "error", "User not found", null);
+            return this.errorMensaje("Usuario no encontrado o ya eliminado");
         }
 
         try {
@@ -282,17 +248,11 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             log.info("Deleting user with email: {}", usuarioEntity.getEmail());
 
             usuarioRepository.save(usuarioEntity);
-            response.setStatus("200");
-            response.setMessage("success");
-            response.setComment("User deleted successfully");
-            response.setData(null);
             log.info("User deleted successfully");
-            return response;
+            return this.exitoMensaje("Usuario eliminado con exito", null);
         } catch (Exception e) {
-            response.setStatus("500");
-            response.setMessage("error");
-            response.setComment("User delete failed, comment: " + e.getMessage());
-            return response;
+            log.error("User delete failed, comment: " + e.getMessage());
+            return this.exceptionMensaje("Error al eliminar el usuario", e);
         }
     }
 
@@ -310,16 +270,11 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
         try {
             rol.setPasivo(false);
             rolRepository.save(rol);
-            response.setStatus("200");
-            response.setMessage("success");
-            response.setComment("Role saved successfully");
-            response.setData(rol);
-            return response;
+            log.info("Role saved successfully");
+            return this.exitoMensaje("Rol guardado con exito", null);
         } catch (Exception e) {
-            response.setStatus("500");
-            response.setMessage("error");
-            response.setComment("Role save failed, comment: " + e.getMessage());
-            return response;
+            log.error("Role save failed, comment: " + e.getMessage());
+            return this.exceptionMensaje("Error al guardar el rol", e);
         }
     }
 
@@ -332,10 +287,8 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
         Rol rol = rolRepository.findByNombre(roleName);
 
         if (usuario == null || rol == null) {
-            log.error("User not found in the database");
-            response.put("status", "404");
-            response.put("message", "error");
-            response.put("comment", "User or role not found");
+            log.error("User or role not found in the database");
+            response.put("message", "Usuario o rol no encontrado");
             return response;
         }
 

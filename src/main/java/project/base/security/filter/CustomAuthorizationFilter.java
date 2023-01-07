@@ -10,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import project.base.security.util.Constantes;
 
 import java.util.*;
 
@@ -21,14 +22,14 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.FilterChain filterChain) throws javax.servlet.ServletException, java.io.IOException {
-        if (request.getServletPath().equals("/api/login") || request.getServletPath().equals("/api/token/refresh")) {
+        if (request.getServletPath().equals("/login") || request.getServletPath().equals("/token/refresh")) {
             filterChain.doFilter(request, response);
         } else {
             String authorizationHeader = request.getHeader("Authorization");
             if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 try {
                     String token = authorizationHeader.substring("Bearer ".length());
-                    String secretKeyJwt = "6300cee0-0b76-439f-b61e-962746f75b34";
+                    String secretKeyJwt = Constantes.SECRET_KEY_JWT;
                     Algorithm algorithm = Algorithm.HMAC256(secretKeyJwt.getBytes());
                     JWTVerifier verifier = JWT.require(algorithm).build();
                     DecodedJWT decodedJWT = verifier.verify(token);
