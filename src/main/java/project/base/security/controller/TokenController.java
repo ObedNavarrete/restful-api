@@ -26,7 +26,7 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping("/api/token")
+@RequestMapping("/token")
 @Slf4j @RequiredArgsConstructor
 public class TokenController {
     private final UsuarioService usuarioService;
@@ -41,9 +41,9 @@ public class TokenController {
                 Algorithm algorithm = Algorithm.HMAC256(secretKeyJwt.getBytes());
                 JWTVerifier verifier = JWT.require(algorithm).build();
                 DecodedJWT decodedJWT = verifier.verify(refresh_token);
-                String username = decodedJWT.getSubject();
+                Integer id = Integer.parseInt(decodedJWT.getSubject());
 
-                UserDTO user = usuarioService.obtenerPorEmail(username);
+                UserDTO user = usuarioService.obtenerUserPorId(id);
 
                 if (user == null){
                     response.setHeader("error", "Usuario no encontrado");
@@ -75,7 +75,7 @@ public class TokenController {
                 response.setStatus(FORBIDDEN.value());
                 // response.sendError(FORBIDDEN.value());
                 Map<String, String> error = new HashMap<>();
-                error.put("token_invalid", exception.getMessage());
+                error.put("invalid_refresh_token", exception.getMessage());
                 response.setContentType(APPLICATION_JSON_VALUE);
                 new ObjectMapper().writeValue(response.getOutputStream(), error);
             }

@@ -67,7 +67,6 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     public ResponseDTO guardar(UsuarioPassDTO user) {
         log.info("save new user {} to the database ", user.getEmail());
 
-        ResponseDTO response = new ResponseDTO();
         try {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             Usuario usuarioEntity = usuarioMapper.withPassToEtity(user);
@@ -115,7 +114,6 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             return this.errorMensaje("El email o el telefono son obligatorios");
         }
 
-        ResponseDTO response = new ResponseDTO();
         try {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             Usuario usuarioEntity = usuarioMapper.withPassToEtity(user);
@@ -135,9 +133,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     @Override
     public ResponseDTO obtenerPorId(Integer id) {
         log.info("get user by id {} ", id);
-        Usuario user = usuarioRepository.findById(id).orElse(null);
-
-        Integer idUsuario = this.creadoPor();
+        Usuario user = usuarioRepository.findByPasivoIsFalseAndId(id);
 
         if (user == null) {
             log.error("User not found in the database");
@@ -171,6 +167,17 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     }
 
     @Override
+    public UserDTO obtenerUserPorId(Integer id) {
+        log.info("get user by id {} ", id);
+        Usuario user = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndId(id);
+        if (user == null) {
+            log.error("User not found in the database");
+            throw new UsernameNotFoundException("User not found");
+        }
+        return usuarioMapper.toDTO(user);
+    }
+
+    @Override
     public ResponseDTO obtenerTodos(int page, int size) {
         log.info("get all users");
         PageResponse pageResponse = new PageResponse();
@@ -200,7 +207,6 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     @Override
     public ResponseDTO actualizar(Integer id, UserDTO user) {
         log.info("update user {} to the database ", user.toString());
-        ResponseDTO response = new ResponseDTO();
 
         Usuario usuarioEntity = usuarioRepository.findById(id).orElse(null);
         if (usuarioEntity == null) {
@@ -230,7 +236,6 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     @Override
     public ResponseDTO eliminar(Integer id) {
         log.info("delete user by id {} ", id);
-        ResponseDTO response = new ResponseDTO();
 
         Usuario usuarioEntity = usuarioRepository.findByPasivoIsFalseAndId(id);
         if (usuarioEntity == null) {
@@ -266,7 +271,6 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     @Override
     public ResponseDTO guardarRol(Rol rol) {
         log.info("save new role {} to the database ", rol.getNombre());
-        ResponseDTO response = new ResponseDTO();
         try {
             rol.setPasivo(false);
             rolRepository.save(rol);
@@ -279,11 +283,11 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     }
 
     @Override
-    public Map<String, String> agregarRolAlUsuario(String email, String roleName) {
-        log.info("add role {} to user {} ", roleName, email);
+    public Map<String, String> agregarRolAlUsuario(String emailOrPhone, String roleName) {
+        log.info("add role {} to user {} ", roleName, emailOrPhone);
         Map<String, String> response = new HashMap<>();
 
-        Usuario usuario = usuarioRepository.findByEmail(email);
+        Usuario usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndTelefonoOrEmail(emailOrPhone, emailOrPhone);
         Rol rol = rolRepository.findByNombre(roleName);
 
         if (usuario == null || rol == null) {
@@ -316,11 +320,11 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     }
 
     @Override
-    public Map<String, String> eliminarRolDelUsuario(String email, String roleName) {
-        log.info("delete role {} from user {} ", roleName, email);
+    public Map<String, String> eliminarRolDelUsuario(String emailOrPhone, String roleName) {
+        log.info("delete role {} from user {} ", roleName, emailOrPhone);
         Map<String, String> response = new HashMap<>();
 
-        Usuario usuario = usuarioRepository.findByEmail(email);
+        Usuario usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndTelefonoOrEmail(emailOrPhone, emailOrPhone);
         Rol rol = rolRepository.findByNombre(roleName);
 
         if (usuario == null || rol == null) {
@@ -332,7 +336,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
         }
 
         if (usuario.getRoles().contains(rol)) {
-            log.info("Deleting role {} from user {}", roleName, email);
+            log.info("Deleting role {} from user {}", roleName, emailOrPhone);
             usuario.getRoles().remove(rol);
             response.put("status", "200");
             response.put("message", "success");

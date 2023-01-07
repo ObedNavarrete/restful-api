@@ -21,6 +21,8 @@ public interface UsuarioService {
 
     UserDTO obtenerPorTelefono(String phone);
 
+    UserDTO obtenerUserPorId(Integer id);
+
     ResponseDTO obtenerTodos(int page, int size);
 
     ResponseDTO actualizar(Integer id, UserDTO user);
