@@ -10,16 +10,16 @@ import javax.validation.constraints.Pattern;
 public class UsuarioPassDTO {
     private Integer id;
 
-    @NotNull(message = "First name is required")
+    @NotNull(message = "El campo nombre no puede ser nulo")
     private String nombre;
-    @NotNull(message = "Phone is required")
-    @Pattern(regexp = "^(\\+?\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$", message = "Phone number is not valid")
-    @Length(min = 8, max = 8, message = "Phone number must be 10 digits")
+    @NotNull(message = "El campo telefono no puede ser nulo")
+    @Length(min = 8, max = 8, message = "El campo telefono debe tener 8 caracteres")
+    @Pattern(regexp = "^[0-9]*$", message = "El campo telefono debe ser numérico")
     private String telefono;
-    @NotNull(message = "Email is required")
-    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$", message = "Email is not valid")
+    @NotNull(message = "El campo email no puede ser nulo")
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$", message = "El campo email debe ser un email válido")
     private String email;
-    @NotNull(message = "Password is required")
+    @NotNull(message = "La contraseña no puede ser nula")
     private String password;
     private Boolean activo;
 }
