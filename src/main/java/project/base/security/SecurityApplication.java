@@ -1,5 +1,6 @@
 package project.base.security;
 
+import com.auth0.jwt.algorithms.Algorithm;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -33,7 +34,6 @@ public class SecurityApplication {
     CommandLineRunner runner(UsuarioService usersService) {
         return args -> {
             usersService.guardarRol(new Rol(null, "ROLE_SUPER_ADMIN", false));
-
 
             usersService.guardar(
                     new UsuarioPassDTO(null,

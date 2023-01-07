@@ -14,7 +14,7 @@ import project.base.security.service.UsuarioService;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/public")
+@RequestMapping("/public")
 @RequiredArgsConstructor
 @Slf4j
 public class PublicController {

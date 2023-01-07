@@ -20,4 +20,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Usuario findByPasivoIsFalseAndActivoIsTrueAndTelefono(String phone);
 
     Usuario findByPasivoIsFalseAndId(Integer id);
+
+    Usuario findByPasivoIsFalseAndActivoIsTrueAndTelefonoOrEmail(String phone, String email);
+
+    @Query(value = "select id from usuario where pasivo = false and activo = true and id = ?1", nativeQuery = true)
+    Integer obtenerId(Integer id);
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import project.base.security.dto.RolDTO;
 import project.base.security.dto.UserDTO;
 import project.base.security.service.UsuarioService;
+import project.base.security.util.Constantes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,7 +36,7 @@ public class TokenController {
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             try {
-                String secretKeyJwt = "6300cee0-0b76-439f-b61e-962746f75b34";
+                String secretKeyJwt = Constantes.SECRET_KEY_JWT;
                 String refresh_token = authorizationHeader.substring("Bearer ".length());
                 Algorithm algorithm = Algorithm.HMAC256(secretKeyJwt.getBytes());
                 JWTVerifier verifier = JWT.require(algorithm).build();

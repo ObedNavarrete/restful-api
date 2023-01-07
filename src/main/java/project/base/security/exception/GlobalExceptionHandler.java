@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNullApi;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -247,7 +248,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("status", 400);
         body.put("message", "error");
-        body.put("comment", "Data integrity violation, check the data");
-        return new ResponseEntity<>(body, HttpStatus.OK);
+        String message = ex.getCause().getCause().getMessage();
+        message = message.substring(message.indexOf("Detail:"));
+        log.error("DataIntegrityViolationException: " + message);
+        body.put("comment", "Error " + message);
+        return ResponseEntity.status(HttpStatus.OK).body(body);
     }
 }
