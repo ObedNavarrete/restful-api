@@ -7,7 +7,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import project.base.security.dto.UsuarioRolDTO;
-import project.base.security.dto.UserDTO;
 import project.base.security.dto.UsuarioPassDTO;
 import project.base.security.entity.Rol;
 import project.base.security.service.UsuarioService;
@@ -106,7 +105,7 @@ public class UsuarioController extends UtilityBase {
     @PostMapping("/rol")
     public ResponseEntity<?> saveRole(@RequestBody Rol rol) {
         if (this.esUsuarioValido()) {
-            URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/role/save").toUriString());
+            URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/role/save").toUriString());
             return ResponseEntity.created(uri).body(usuarioService.guardarRol(rol));
         } else {
             return this.forbiddenResponse();
@@ -117,17 +116,17 @@ public class UsuarioController extends UtilityBase {
     @PostMapping("/rol/agregarRolAlUsuario")
     public ResponseEntity<?> agregarRolAlUsuario(@Valid @RequestBody UsuarioRolDTO form) {
         if (this.esUsuarioValido()) {
-            return ResponseEntity.ok(usuarioService.agregarRolAlUsuario(form.getEmail(), form.getNombreRol()));
+            return ResponseEntity.ok(usuarioService.agregarRolAlUsuario(form.getIdUsuario(), form.getNombreRol()));
         } else {
             return this.forbiddenResponse();
         }
     }
 
     @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
-    @DeleteMapping("/role/eliminarRolDelUsuario")
+    @DeleteMapping("/rol/eliminarRolDelUsuario")
     public ResponseEntity<?> eliminarRolDelUsuario(@Valid @RequestBody UsuarioRolDTO form) {
         if (this.esUsuarioValido()) {
-            return ResponseEntity.ok(usuarioService.eliminarRolDelUsuario(form.getEmail(), form.getNombreRol()));
+            return ResponseEntity.ok(usuarioService.eliminarRolDelUsuario(form.getIdUsuario(), form.getNombreRol()));
         } else {
             return this.forbiddenResponse();
         }
