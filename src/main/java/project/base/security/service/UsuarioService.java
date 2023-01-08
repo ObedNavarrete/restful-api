@@ -39,7 +39,7 @@ public interface UsuarioService {
 
     ResponseDTO guardarRol(Rol rol);
 
-    Map<String, String> agregarRolAlUsuario(String email, String roleName);
+    Map<String, String> agregarRolAlUsuario(Integer id, String roleName);
 
-    Map<String, String> eliminarRolDelUsuario(String email, String roleName);
+    Map<String, String> eliminarRolDelUsuario(Integer id, String roleName);
 }

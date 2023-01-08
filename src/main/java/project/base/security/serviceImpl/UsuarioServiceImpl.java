@@ -271,6 +271,8 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     @Override
     public ResponseDTO guardarRol(Rol rol) {
         log.info("save new role {} to the database ", rol.getNombre());
+        rol.setNombre("ROLE_" + rol.getNombre().toUpperCase());
+
         try {
             rol.setPasivo(false);
             rolRepository.save(rol);
@@ -283,11 +285,13 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
     }
 
     @Override
-    public Map<String, String> agregarRolAlUsuario(String emailOrPhone, String roleName) {
-        log.info("add role {} to user {} ", roleName, emailOrPhone);
+    public Map<String, String> agregarRolAlUsuario(Integer id, String roleName) {
+        log.info("add role {} to user {} ", roleName, id);
         Map<String, String> response = new HashMap<>();
 
-        Usuario usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndTelefonoOrEmail(emailOrPhone, emailOrPhone);
+        roleName = "ROLE_" + roleName.toUpperCase();
+
+        Usuario usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndId(id);
         Rol rol = rolRepository.findByNombre(roleName);
 
         if (usuario == null || rol == null) {
@@ -300,7 +304,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             log.error("User already has this role");
             response.put("status", "400");
             response.put("message", "error");
-            response.put("comment", "User already has this role");
+            response.put("comment", "El usuario ya tiene este rol");
             return response;
         }
 
@@ -309,44 +313,46 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             usuarioRepository.save(usuario);
             response.put("status", "200");
             response.put("message", "success");
-            response.put("comment", "Role added to user successfully");
+            response.put("comment", "El rol se agrego al usuario con exito");
             return response;
         } catch (Exception e) {
             response.put("status", "500");
             response.put("message", "error");
-            response.put("comment", "Role add to user failed, comment: " + e.getMessage());
+            response.put("comment", "Fallo al agregar el rol al usuario");
             return response;
         }
     }
 
     @Override
-    public Map<String, String> eliminarRolDelUsuario(String emailOrPhone, String roleName) {
-        log.info("delete role {} from user {} ", roleName, emailOrPhone);
+    public Map<String, String> eliminarRolDelUsuario(Integer id, String roleName) {
+        log.info("delete role {} from user {} ", roleName, id);
         Map<String, String> response = new HashMap<>();
 
-        Usuario usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndTelefonoOrEmail(emailOrPhone, emailOrPhone);
+        roleName = "ROLE_" + roleName.toUpperCase();
+
+        Usuario usuario = usuarioRepository.findByPasivoIsFalseAndActivoIsTrueAndId(id);
         Rol rol = rolRepository.findByNombre(roleName);
 
         if (usuario == null || rol == null) {
             log.error("User or role not found in the database");
             response.put("status", "404");
             response.put("message", "error");
-            response.put("comment", "User or role not found");
+            response.put("comment", "Usuario o rol no encontrado");
             return response;
         }
 
         if (usuario.getRoles().contains(rol)) {
-            log.info("Deleting role {} from user {}", roleName, emailOrPhone);
+            log.info("Deleting role {} from user {}", roleName, id);
             usuario.getRoles().remove(rol);
             response.put("status", "200");
             response.put("message", "success");
-            response.put("comment", "Role deleted successfully");
+            response.put("comment", "Rol eliminado del usuario con exito");
             return response;
         } else {
             log.error("User does not have the role");
             response.put("status", "404");
             response.put("message", "error");
-            response.put("comment", "User does not have the role");
+            response.put("comment", "Usuario no tiene el rol que desea eliminar");
             return response;
         }
     }
