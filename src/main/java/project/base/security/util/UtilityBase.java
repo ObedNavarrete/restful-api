@@ -19,10 +19,6 @@ public class UtilityBase {
     @Autowired
     UsuarioRepository usuarioRepository;
 
-    public static final HashMap map = new HashMap() {{
-        put("error", "El status de este usuario ha cambiado, por favor actualice la página");
-    }};
-
     // creadoPor
     public Integer creadoPor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -132,11 +128,6 @@ public class UtilityBase {
         } else {
             return true;
         }
-    }
-
-    // Forbbiden Controller Response
-    public ResponseEntity<?> forbiddenResponse() {
-        return ResponseEntity.status(403).body(map);
     }
 
     public ResponseDTO exceptionMensaje(String mensaje, Exception e) {
