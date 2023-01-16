@@ -4,6 +4,8 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -42,8 +44,8 @@ public class Usuario implements Serializable {
     // Campos de auditoria
      */
     private Boolean pasivo = false;
-    private Date creadoEl;
-    private Date modificadoEl;
+    private LocalDateTime creadoEl;
+    private LocalDateTime modificadoEl;
     private Integer creadoPor;
     private Integer modificadoPor;
     private String creadoEnIp;

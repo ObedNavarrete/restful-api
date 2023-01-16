@@ -1,7 +1,6 @@
 package project.base.security.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import project.base.security.dto.ResponseDTO;
@@ -9,9 +8,9 @@ import project.base.security.entity.Usuario;
 import project.base.security.repository.UsuarioRepository;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 public class UtilityBase {
@@ -26,8 +25,8 @@ public class UtilityBase {
     }
 
     // creadoEl
-    public Date creadoEl() {
-        return new Date();
+    public LocalDateTime creadoEl() {
+        return LocalDateTime.now();
     }
 
     // creadoEnIp
@@ -46,8 +45,8 @@ public class UtilityBase {
     }
 
     // modificadoEl
-    public Date modificadoEl() {
-        return new Date();
+    public LocalDateTime modificadoEl() {
+        return LocalDateTime.now();
     }
 
     // modificadoEnIp

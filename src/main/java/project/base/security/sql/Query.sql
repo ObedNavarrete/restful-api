@@ -12,7 +12,7 @@ create table usuario(
     telefono varchar(10) constraint ukdu5v5sr43g5bfnji4vb8hg5s3 unique,
     activo boolean,
     pasivo boolean not null,
-    creado_por int references usuario(id),
+    creado_por int references usuario(id) null,
     creado_el timestamp not null,
     creado_en_ip varchar(50) not null,
     modificado_por int references usuario(id),
