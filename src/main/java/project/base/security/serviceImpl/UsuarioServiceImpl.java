@@ -71,7 +71,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             Usuario usuarioEntity = usuarioMapper.withPassToEtity(user);
             usuarioEntity.setActivo(true);
-            usuarioEntity.setCreadoEl(new Date());
+            usuarioEntity.setCreadoEl(this.creadoEl());
             usuarioEntity.setCreadoEnIp("localhost");
             usuarioRepository.save(usuarioEntity);
             return this.exitoMensaje("Usuario creado con exito", null);
@@ -94,7 +94,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             Usuario usuarioEntity = usuarioMapper.withPassToEtity(user);
             usuarioEntity.setActivo(true);
             usuarioEntity.setCreadoPor(this.creadoPor());
-            usuarioEntity.setCreadoEl(new Date());
+            usuarioEntity.setCreadoEl(this.creadoEl());
             usuarioEntity.setCreadoEnIp(this.creadoEnIp());
             Usuario nu = usuarioRepository.save(usuarioEntity);
             nu.getRoles().add(rolRepository.findByNombre("ROLE_SUPER_ADMIN"));
@@ -119,7 +119,7 @@ public class UsuarioServiceImpl extends UtilityBase implements UsuarioService, U
             Usuario usuarioEntity = usuarioMapper.withPassToEtity(user);
             usuarioEntity.setActivo(true);
             usuarioEntity.setCreadoPor(this.creadoPor());
-            usuarioEntity.setCreadoEl(new Date());
+            usuarioEntity.setCreadoEl(this.creadoEl());
             usuarioEntity.setCreadoEnIp(this.creadoEnIp());
             Usuario nu = usuarioRepository.save(usuarioEntity);
             nu.getRoles().add(rolRepository.findByNombre("ROLE_ADMIN"));
